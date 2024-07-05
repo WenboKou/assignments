@@ -807,7 +807,13 @@ def softmax_loss(x, y):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    x_exp = np.exp(x)
+    probs = x_exp / x_exp.sum(axis=1, keepdims=True)
+    loss = -np.sum(np.log(probs[range(y.shape[0]), y])) / y.shape[0]
+
+
+    dx = np.ones_like(x)
+    
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
