@@ -776,10 +776,15 @@ def svm_loss(x, y):
     # TODO: Copy over your solution from A1.
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    dx = np.ones_like(x)
+
     margins = x - x[range(x.shape[0]), y].reshape(-1, 1) + 1.0
+    dx[margins < 0] = 0
     margins[margins < 0] = 0
     loss = np.sum(margins) / margins.shape[0]
-    dx = np.zeros()
+    
+    dx[range(dx.shape[0]), y] -= np.sum(dx, axis=1)
+    dx /= dx.shape[0]
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
