@@ -812,7 +812,9 @@ def softmax_loss(x, y):
     loss = -np.sum(np.log(probs[range(y.shape[0]), y])) / y.shape[0]
 
 
-    dx = np.ones_like(x)
+    dx = probs.copy()
+    dx[range(dx.shape[0]), y] -= 1
+    dx /= dx.shape[0]
     
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
