@@ -156,9 +156,17 @@ def adam(w, dw, config=None):
     # using it in any calculations.                                           #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    config["t"] += 1
 
-    pass
+    m = config["beta1"]*config["m"] + (1-config["beta1"])*dw
+    mt = m / (1-config["beta1"]**config["t"])
+    v = config["beta2"]*config["v"] + (1-config["beta2"])*(dw**2)
+    vt = v / (1-config["beta2"]**config["t"])
+    w += - config["learning_rate"] * mt / (np.sqrt(vt) + config["epsilon"])
+    next_w = w
 
+    config["m"] = m
+    config["v"] = v
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
