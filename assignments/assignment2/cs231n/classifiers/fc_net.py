@@ -77,7 +77,7 @@ class FullyConnectedNet(object):
         for layer, output_dim in zip(range(1, self.num_layers + 1), hidden_dims + [num_classes]):
           self.params[f"W{layer}"] = np.random.normal(0, weight_scale, (input_dim, output_dim)).astype(dtype)
           self.params[f"b{layer}"] = np.zeros((1, output_dim)).astype(dtype)
-          if self.normalization == "batchnorm" and layer < self.num_layers:
+          if self.normalization and layer < self.num_layers:
             self.params[f"gamma{layer}"] = np.ones(output_dim).astype(dtype)
             self.params[f"beta{layer}"] = np.zeros(output_dim).astype(dtype)
           input_dim = output_dim
@@ -164,7 +164,8 @@ class FullyConnectedNet(object):
             output_data, cache_norm = batchnorm_forward(output_data, self.params[f"gamma{layer}"], self.params[f"beta{layer}"], self.bn_params[layer-1])
             self.caches[layer]["batchnorm"] = cache_norm
           elif self.normalization == "layernorm":
-            pass
+            output_data, cache_norm = layernorm_forward(output_data, self.params[f"gamma{layer}"], self.params[f"beta{layer}"], {})
+            self.caches[layer]["layernorm"] = cache_norm
 
           # relu
           output_data, cache_relu = relu_forward(output_data)
@@ -214,6 +215,8 @@ class FullyConnectedNet(object):
           dout = relu_backward(dout, self.caches[layer]["relu"])
           if self.normalization == "batchnorm":
             dout, grads[f"gamma{layer}"], grads[f"beta{layer}"] = batchnorm_backward(dout, self.caches[layer]["batchnorm"])
+          elif self.normalization == "layernorm":
+            dout, grads[f"gamma{layer}"], grads[f"beta{layer}"] = layernorm_backward(dout, self.caches[layer]["layernorm"])
           dout, grads[f"W{layer}"], grads[f"b{layer}"] = affine_backward(dout, self.caches[layer]["affine"])
           # TODO: 如果有dropout，会对正则项有什么影响？
           grads[f"W{layer}"] += self.reg * self.params[f"W{layer}"]
