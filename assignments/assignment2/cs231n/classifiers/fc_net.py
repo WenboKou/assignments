@@ -77,7 +77,7 @@ class FullyConnectedNet(object):
         for layer, output_dim in zip(range(1, self.num_layers + 1), hidden_dims + [num_classes]):
           self.params[f"W{layer}"] = np.random.normal(0, weight_scale, (input_dim, output_dim)).astype(dtype)
           self.params[f"b{layer}"] = np.zeros((1, output_dim)).astype(dtype)
-          if layer < self.num_layers:
+          if self.normalization == "batchnorm" and layer < self.num_layers:
             self.params[f"gamma{layer}"] = np.ones(output_dim).astype(dtype)
             self.params[f"beta{layer}"] = np.zeros(output_dim).astype(dtype)
           input_dim = output_dim
