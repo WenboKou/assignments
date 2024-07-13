@@ -398,7 +398,7 @@ def layernorm_forward(x, gamma, beta, ln_param):
 
     x_hat = (x - sample_mean) / sd
     out = gamma * x_hat + beta
-
+    cache = (x_hat, gamma, x, sample_mean, sample_var, eps, sd)
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -431,7 +431,18 @@ def layernorm_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    x_hat, gamma, x, sample_mean, sample_var, eps, sd = cache
+
+    dgamma = np.sum(dout * x_hat, axis=0)
+    dbeta = np.sum(dout, axis=0)
+    
+    dx_hat = dout * gamma
+
+    dsd = np.sum(-dx_hat * (x - sample_mean) / sd**2, axis=1, keepdims=True)
+    dsample_var = 0.5 * dsd / (sample_var + eps)**0.5
+
+    dsample_mean = np.sum(-dx_hat/sd, axis=1, keepdims=True) + dsample_var * np.mean(-2 * (x-sample_mean), axis=1, keepdims=True)
+    dx = dx_hat / sd + dsample_mean * np.ones_like(x) / x.shape[1] + dsample_var * 2 * (x - sample_mean) / x.shape[1]
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
