@@ -77,6 +77,9 @@ class FullyConnectedNet(object):
         for layer, output_dim in zip(range(1, self.num_layers + 1), hidden_dims + [num_classes]):
           self.params[f"W{layer}"] = np.random.normal(0, weight_scale, (input_dim, output_dim)).astype(dtype)
           self.params[f"b{layer}"] = np.zeros((1, output_dim)).astype(dtype)
+          if layer < self.num_layers:
+            self.params[f"gamma{layer}"] = np.ones(output_dim).astype(dtype)
+            self.params[f"beta{layer}"] = np.zeros(output_dim).astype(dtype)
           input_dim = output_dim
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -153,18 +156,24 @@ class FullyConnectedNet(object):
         self.caches = {}
         input_data = X.reshape(X.shape[0], -1).astype(self.dtype)
         for layer in range(1, self.num_layers):
+          self.caches[layer] = {}
           # affine
           output_data, cache_affine = affine_forward(input_data, self.params[f"W{layer}"], self.params[f"b{layer}"])
           # batch/layer norm          
-          if self.normalization:
+          if self.normalization == "batchnorm":
+            output_data, cache_norm = batchnorm_forward(output_data, self.params[f"gamma{layer}"], self.params[f"beta{layer}"], self.bn_params[layer-1])
+            self.caches[layer]["batchnorm"] = cache_norm
+          elif self.normalization == "layernorm":
             pass
+
           # relu
           output_data, cache_relu = relu_forward(output_data)
           # dropout
           if self.use_dropout:
             pass
           input_data = output_data
-          self.caches[layer] = {"affine": cache_affine, "relu": cache_relu}
+          self.caches[layer]["affine"] = cache_affine
+          self.caches[layer]["relu"] = cache_relu
         # final output layer
         scores, self.caches[self.num_layers] = affine_forward(input_data, self.params[f"W{self.num_layers}"], self.params[f"b{self.num_layers}"])
 
@@ -195,16 +204,16 @@ class FullyConnectedNet(object):
 
         loss, dscores = softmax_loss(scores, y)
         loss += 0.5 * self.reg * sum([np.sum(self.params[f"W{layer}"]**2) for layer in range(1, self.num_layers+1)])
-
+        # 最后一层
         dout, grads[f"W{self.num_layers}"], grads[f"b{self.num_layers}"] = affine_backward(dscores, self.caches[self.num_layers])
         grads[f"W{self.num_layers}"] += self.reg * self.params[f"W{self.num_layers}"]
-
+        # 倒数第二层到第一层
         for layer in range(self.num_layers - 1, 0, -1):
           if self.use_dropout:
             pass
           dout = relu_backward(dout, self.caches[layer]["relu"])
-          if self.normalization:
-            pass
+          if self.normalization == "batchnorm":
+            dout, grads[f"gamma{layer}"], grads[f"beta{layer}"] = batchnorm_backward(dout, self.caches[layer]["batchnorm"])
           dout, grads[f"W{layer}"], grads[f"b{layer}"] = affine_backward(dout, self.caches[layer]["affine"])
           # TODO: 如果有dropout，会对正则项有什么影响？
           grads[f"W{layer}"] += self.reg * self.params[f"W{layer}"]
