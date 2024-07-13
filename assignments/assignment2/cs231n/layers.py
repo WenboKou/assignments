@@ -340,8 +340,14 @@ def batchnorm_backward_alt(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    x_hat, gamma, x, sample_mean, sample_var, eps, sd = cache
 
+    dgamma = np.sum(dout * x_hat, axis=0)
+    dbeta = np.sum(dout, axis=0)
+    N = x.shape[0]
+    dx = (dout / np.sqrt(sample_var + eps) - 
+      2 * (x - sample_mean) * dout / (N * (sample_var + eps) ** 1.5) -
+      np.sum(dout / N, axis=0))
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
