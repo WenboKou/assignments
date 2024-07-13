@@ -240,7 +240,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         running_mean = momentum * running_mean + (1 - momentum) * sample_mean
         running_var = momentum * running_var + (1 - momentum) * sample_var
 
-        cache = (x_hat)
+        cache = (x_hat, gamma, x, sample_mean, sample_var, eps, sd)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
         #                           END OF YOUR CODE                          #
@@ -294,21 +294,19 @@ def batchnorm_backward(dout, cache):
     # might prove to be helpful.                                              #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    x_hat = cache
-    dx = 0
+    x_hat, gamma, x, sample_mean, sample_var, eps, sd = cache
 
     dgamma = np.sum(dout * x_hat, axis=0)
     dbeta = np.sum(dout, axis=0)
-    print(dgamma.shape, dbeta.shape)
-
     
-    # dx_hat = dout * gamma
+    dx_hat = dout * gamma
 
-    # dsample_var = dx_hat * (-0.5 * (x-sample_mean) / sample_var**1.5)
-    
-    # dsample_mean = dx_hat * (-1 / np.sqrt())
-    # dx = dsample_mean(?) * np.ones_like(dout) / dout.shape[0] + dsample_var * 
+    dsd = np.sum(-dx_hat * (x - sample_mean) / sd**2, axis=0)
+    dsample_var = 0.5 * dsd / (sample_var + eps)**0.5
 
+    dsample_mean = np.sum(-dx_hat/sd, axis=0) + dsample_var * np.mean(-2 * (x-sample_mean), axis=0)
+
+    dx = dx_hat / sd + dsample_mean * np.ones_like(x) / x.shape[0] + dsample_var * 2 * (x - sample_mean) / x.shape[0]
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
