@@ -171,7 +171,8 @@ class FullyConnectedNet(object):
           output_data, cache_relu = relu_forward(output_data)
           # dropout
           if self.use_dropout:
-            pass
+            output_data, cache_dropout = dropout_forward(output_data, self.dropout_param)
+            self.caches[layer]["dropout"] = cache_dropout
           input_data = output_data
           self.caches[layer]["affine"] = cache_affine
           self.caches[layer]["relu"] = cache_relu
@@ -211,14 +212,14 @@ class FullyConnectedNet(object):
         # 倒数第二层到第一层
         for layer in range(self.num_layers - 1, 0, -1):
           if self.use_dropout:
-            pass
+            dout = dropout_backward(dout, self.caches[layer]["dropout"])
           dout = relu_backward(dout, self.caches[layer]["relu"])
           if self.normalization == "batchnorm":
             dout, grads[f"gamma{layer}"], grads[f"beta{layer}"] = batchnorm_backward(dout, self.caches[layer]["batchnorm"])
           elif self.normalization == "layernorm":
             dout, grads[f"gamma{layer}"], grads[f"beta{layer}"] = layernorm_backward(dout, self.caches[layer]["layernorm"])
           dout, grads[f"W{layer}"], grads[f"b{layer}"] = affine_backward(dout, self.caches[layer]["affine"])
-          # TODO: 如果有dropout，会对正则项有什么影响？
+         
           grads[f"W{layer}"] += self.reg * self.params[f"W{layer}"]
         
         
