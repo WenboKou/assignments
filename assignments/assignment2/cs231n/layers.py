@@ -1,4 +1,5 @@
 from builtins import range
+from typing import ParamSpecArgs
 import numpy as np
 
 
@@ -601,22 +602,39 @@ def conv_backward_naive(dout, cache):
     """A naive implementation of the backward pass for a convolutional layer.
 
     Inputs:
-    - dout: Upstream derivatives.
+    - dout: Upstream derivatives. (N, F, H', W')
     - cache: A tuple of (x, w, b, conv_param) as in conv_forward_naive
 
     Returns a tuple of:
-    - dx: Gradient with respect to x
-    - dw: Gradient with respect to w
-    - db: Gradient with respect to b
+    - dx: Gradient with respect to x (N, C, H, W)
+    - dw: Gradient with respect to w (F, C, HH, WW)
+    - db: Gradient with respect to b (F,)
     """
     dx, dw, db = None, None, None
     ###########################################################################
     # TODO: Implement the convolutional backward pass.                        #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    x, w, b, conv_param = cache
+    N, C, H, W = x.shape
+    N, F, H_prime, W_prime = dout.shape
+    F, C, HH, WW = w.shape
+    
+    stride, pad = conv_param["stride"], conv_param["pad"]
+    padded_x = np.pad(x, ((0, 0), (0, 0), (pad, pad), (pad, pad)), 'constant', constant_values=0)
 
-    pass
+    dw = np.zeros(w.shape, dtype=float)
+    db = np.zeros((F,), dtype=float)
+    dpadded_x = np.zeros(padded_x.shape, dtype=float)
 
+    for n in range(N):
+      for filter_num in range(F):
+        for height in range(H_prime):
+          for width in range(W_prime):
+            dw[filter_num,:,:,:] += dout[n,filter_num,height,width] * padded_x[n,:,height*stride:height*stride+HH,width*stride:width*stride+WW]
+            db[filter_num] += dout[n,filter_num,height,width]    
+            dpadded_x[n,:,height*stride:height*stride+HH,width*stride:width*stride+WW] +=  dout[n,filter_num,height,width] * w[filter_num,:,:,:]
+    dx = dpadded_x[:,:,pad:-pad,pad:-pad]
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
