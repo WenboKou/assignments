@@ -201,7 +201,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     eps = bn_param.get("eps", 1e-5)
     momentum = bn_param.get("momentum", 0.9)
 
-    N, D = x.shape
+    N, D = x.shape[0], x.shape[1]
     running_mean = bn_param.get("running_mean", np.zeros(D, dtype=x.dtype))
     running_var = bn_param.get("running_var", np.zeros(D, dtype=x.dtype))
 
@@ -230,8 +230,8 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        sample_mean = np.mean(x, axis=0) # (D,)
-        sample_var = np.mean((x - sample_mean)**2, axis=0) # (D,)
+        sample_mean = np.mean(x, axis=0, keepdims=True) # (D,)
+        sample_var = np.mean((x - sample_mean)**2, axis=0, keepdims=True) # (D,)
 
         sd = np.sqrt(sample_var + eps) #(D,)
 
@@ -753,8 +753,9 @@ def spatial_batchnorm_forward(x, gamma, beta, bn_param):
     # Your implementation should be very short; ours is less than five lines. #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
+    N, C, H, W = x.shape
+    out, cache = batchnorm_forward(x.transpose(0, 2, 3, 1).reshape(-1, C), gamma, beta, bn_param)
+    out = out.reshape(N, H, W, C).transpose(0, 3, 1, 2)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -786,9 +787,9 @@ def spatial_batchnorm_backward(dout, cache):
     # Your implementation should be very short; ours is less than five lines. #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
-
+    N, C, H, W = dout.shape
+    dx, dgamma, dbeta = batchnorm_backward(dout.transpose(0, 2, 3, 1).reshape(-1, C), cache)
+    dx = dx.reshape(N, H, W, C).transpose(0, 3, 1, 2)
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -809,7 +810,7 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     - x: Input data of shape (N, C, H, W)
     - gamma: Scale parameter, of shape (1, C, 1, 1)
     - beta: Shift parameter, of shape (1, C, 1, 1)
-    - G: Integer mumber of groups to split into, should be a divisor of C
+    - G: Integer number of groups to split into, should be a divisor of C
     - gn_param: Dictionary with the following keys:
       - eps: Constant for numeric stability
 
@@ -827,14 +828,16 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     # and layer normalization!                                                #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
+    N, C, H, W = x.shape
+    x.reshape(N, C // G, G, H, W)
+    out, cache = layernorm_forward(x.reshape(N, C // G, G, H, W), gamma.reshape(1, C // G, G, 1, 1), beta.reshape(1, C // G, G, 1, 1), gn_param)
+    out = out.reshape(N, C, H, W)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
-    return out, cache
+    return out, (cache, G)
 
 
 def spatial_groupnorm_backward(dout, cache):
@@ -856,9 +859,27 @@ def spatial_groupnorm_backward(dout, cache):
     # This will be extremely similar to the layer norm implementation.        #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    N, C, H, W = dout.shape
 
-    pass
+    cache, G = cache
 
+    dout = dout.reshape(N, C // G, G, H, W)
+    x_hat, gamma, x, sample_mean, sample_var, eps, sd = cache
+
+    dgamma = np.sum(dout * x_hat, axis=(0, 3, 4), keepdims=True)
+    dbeta = np.sum(dout, axis=(0, 3, 4), keepdims=True)
+    
+    dx_hat = dout * gamma
+
+    dsd = np.sum(-dx_hat * (x - sample_mean) / sd**2, axis=1, keepdims=True)
+    dsample_var = 0.5 * dsd / (sample_var + eps)**0.5
+
+    dsample_mean = np.sum(-dx_hat/sd, axis=1, keepdims=True) + dsample_var * np.mean(-2 * (x-sample_mean), axis=1, keepdims=True)
+    dx = dx_hat / sd + dsample_mean * np.ones_like(x) / x.shape[1] + dsample_var * 2 * (x - sample_mean) / x.shape[1]
+
+    dx = dx.reshape(N, C, H, W)
+    dgamma = dgamma.reshape(1, C, 1, 1)
+    dbeta = dbeta.reshape(1, C, 1, 1)
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
