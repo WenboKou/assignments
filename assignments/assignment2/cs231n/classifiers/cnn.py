@@ -62,9 +62,15 @@ class ThreeLayerConvNet(object):
         # the start of the loss() function to see how that happens.                #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
-
+        C, H, W = input_dim
+        self.params["W1"] = np.random.normal(0, weight_scale, (num_filters, C, filter_size, filter_size))
+        self.params["b1"] = np.zeros(num_filters)
+        
+        self.params["W2"] = np.random.normal(0, weight_scale, (num_filters*H*W//4, hidden_dim))
+        self.params["b2"] = np.zeros(hidden_dim)
+        
+        self.params["W3"] = np.random.normal(0, weight_scale, (hidden_dim, num_classes))
+        self.params["b3"] = np.zeros(num_classes)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -102,7 +108,10 @@ class ThreeLayerConvNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        conv_relu_pool_out, conv_relu_pool_cache = conv_relu_pool_forward(X, W1, b1, conv_param, pool_param)
+        affine_relu_out, affine_relu_cache = affine_relu_forward(conv_relu_pool_out, W2, b2)
+        scores, affine_forward_cache = affine_forward(affine_relu_out, W3, b3)
+
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -124,8 +133,10 @@ class ThreeLayerConvNet(object):
         # of 0.5 to simplify the expression for the gradient.                      #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        loss, dscores = softmax_loss(scores, y)
+        loss += 0.5 * self.reg * (np.sum(W1**2) + np.sum(W2**2) + np.sum(W3**2))
 
-        pass
+        #dx, dW1, db1 = conv_relu_pool_backward(dout, conv_relu_pool_cache)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
