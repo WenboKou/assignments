@@ -133,11 +133,23 @@ class ThreeLayerConvNet(object):
         # of 0.5 to simplify the expression for the gradient.                      #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        loss, dscores = softmax_loss(scores, y)
+        loss, dout = softmax_loss(scores, y)
         loss += 0.5 * self.reg * (np.sum(W1**2) + np.sum(W2**2) + np.sum(W3**2))
 
-        #dx, dW1, db1 = conv_relu_pool_backward(dout, conv_relu_pool_cache)
+        dout, dW3, db3 = affine_backward(dout, affine_forward_cache)
 
+        dout, dW2, db2 = affine_relu_backward(dout, affine_relu_cache)
+
+        dout, dW1, db1 = conv_relu_pool_backward(dout, conv_relu_pool_cache)
+
+        grads["W1"] = dW1 + self.reg * W1
+        grads["b1"] = db1
+        
+        grads["W2"] = dW2 + self.reg * W2
+        grads["b2"] = db2
+        
+        grads["W3"] = dW3 + self.reg * W3
+        grads["b3"] = db3
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
