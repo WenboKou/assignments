@@ -149,8 +149,12 @@ def rnn_forward(x, h0, Wx, Wh, b):
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     N, T, D = x.shape
+    N, H = h0.shape
+    h = np.zeros((N, T, H))
+    prev_h = h0
     for t in range(T):
-      next_h, cache = rnn_step_forward(x, prev_h, Wx, Wh, b)
+      prev_h, cache = rnn_step_forward(x[:, t, :], prev_h, Wx, Wh, b)
+      h[:, t, :] = prev_h
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
