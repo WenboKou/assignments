@@ -157,6 +157,14 @@ class CaptioningRNN:
         scores, cache_affine_scores = temporal_affine_forward(h, W_vocab, b_vocab)
         # (5)
         loss, dscores = temporal_softmax_loss(scores, captions_out, mask, verbose=False)
+
+        dh, grads["W_vocab"], grads["b_vocab"] = temporal_affine_backward(dscores, cache_affine_scores)
+
+        dcaptions_in_vector, dh0, grads["Wx"], grads["Wh"], grads["b"] = rnn_backward(dh, cache_rnn)
+
+        grads["W_embed"] = word_embedding_backward(dcaptions_in_vector, cache_embedding)
+
+        dfeatures, grads["W_proj"], grads["b_proj"] = affine_backward(dh0, cache_affine_h0)
         
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
