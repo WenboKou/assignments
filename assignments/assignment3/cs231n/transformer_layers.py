@@ -27,7 +27,7 @@ class PositionalEncoding(nn.Module):
         assert embed_dim % 2 == 0
         # Create an array with a "batch dimension" of 1 (which will broadcast
         # across all examples in the batch).
-        pe = torch.zeros(1, max_len, embed_dim)
+        pe = torch.zeros(1, max_len, embed_dim).float()
         ############################################################################
         # TODO: Construct the positional encoding array as described in            #
         # Transformer_Captioning.ipynb.  The goal is for each row to alternate     #
@@ -38,7 +38,11 @@ class PositionalEncoding(nn.Module):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, embed_dim, 2).float() * (-math.log(10000.0) / embed_dim))
+        pe = torch.zeros(1, max_len, embed_dim)
+        pe[0, :, 0::2] = torch.sin(position * div_term)  # 0, 2, 4, ...
+        pe[0, :, 1::2] = torch.cos(position * div_term)  # 1, 3, 5, ...
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -69,8 +73,8 @@ class PositionalEncoding(nn.Module):
         # afterward. This should only take a few lines of code.                    #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+        output = x + self.pe[:, :x.shape[1], :]
+        output = self.dropout(output)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
