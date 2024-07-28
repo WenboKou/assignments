@@ -231,8 +231,15 @@ class CaptioningRNN:
         # you are using an LSTM, initialize the first cell state to zeros.        #
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        prev_h, _ = affine_forward(features, W_proj, b_proj)
+        y = np.array([self._start]*N) # (N,)
+        for t in range(max_length):
+          x = W_embed[y]  # (N, W)
+          prev_h, _ = rnn_step_forward(x, prev_h, Wx, Wh, b) # (N, H)
+          scores, _ = affine_forward(prev_h, W_vocab, b_vocab) # (N, V)
+          y = np.argmax(scores, axis=1) # (N, 1)
+          captions[:, t] = y
 
-        pass
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
