@@ -165,7 +165,16 @@ class MultiHeadAttention(nn.Module):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        query = self.query(query).reshape(N, S, self.n_head, self.head_dim).transpose(1, 2)
+        key = self.key(key).reshape(N, T, self.n_head, self.head_dim).transpose(1, 2)
+        value = self.value(value).reshape(N, T, self.n_head, self.head_dim).transpose(1, 2)
+
+        scores = torch.matmul(query, key.transpose(2, 3)) # (N, H, S, T)
+        if attn_mask is not None:
+          scores = scores.masked_fill(attn_mask==0, -1e9)
+        scores = F.softmax(scores / math.sqrt(self.head_dim), dim=-1) # (N, H, S, T)
+        out = self.attn_drop(scores) @ value # (N, H, S, E // H)
+        output = self.proj(out.transpose(1, 2).reshape(N, S, -1))
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
