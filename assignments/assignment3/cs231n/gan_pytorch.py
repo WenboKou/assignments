@@ -223,8 +223,20 @@ def build_dc_classifier(batch_size):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    model = nn.Sequential(
+      nn.Conv2d(in_channels=1, out_channels=32, kernel_size=5),
+      nn.LeakyReLU(0.01),
+      nn.MaxPool2d(kernel_size=2, stride=2),
+      nn.Conv2d(in_channels=32, out_channels=64, kernel_size=5),
+      nn.LeakyReLU(0.01),
+      nn.MaxPool2d(kernel_size=2, stride=2),
+      Flatten(),
+      nn.Linear(1024, 4 * 4 * 64),
+      nn.LeakyReLU(0.01),
+      nn.Linear(4 * 4 * 64, 1)
+    )
 
+    return model
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
     #                               END OF YOUR CODE                             #
