@@ -147,7 +147,8 @@ def generator_loss(logits_fake):
     loss = None
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    fake_target = torch.ones((logits_fake.shape[0],)).type(dtype)
+    loss = bce_loss(logits_fake, fake_target)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return loss
