@@ -83,7 +83,14 @@ def generator(noise_dim=NOISE_DIM, seed=None):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    model = nn.Sequential(
+      nn.Linear(noise_dim, 1024),
+      nn.ReLU(),
+      nn.Linear(1024, 1024),
+      nn.ReLU(),
+      nn.Linear(1024, 784),
+      nn.Tanh()
+    )
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
