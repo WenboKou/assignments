@@ -126,7 +126,10 @@ def discriminator_loss(logits_real, logits_fake):
     loss = None
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    real_target = torch.ones((logits_real.shape[0],)).type(dtype)
+    fake_target = torch.zeros((logits_fake.shape[0],)).type(dtype)
+
+    loss = bce_loss(logits_real, real_target) + bce_loss(logits_fake, fake_target)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return loss
