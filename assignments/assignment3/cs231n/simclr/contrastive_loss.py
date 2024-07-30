@@ -18,7 +18,7 @@ def sim(z_i, z_j):
     #                                                                            #
     # HINT: torch.linalg.norm might be helpful.                                  #
     ##############################################################################
-    
+    norm_dot_product = z_i @ z_j / (torch.linalg.norm(z_i) * torch.linalg.norm(z_j))
     
     ##############################################################################
     #                               END OF YOUR CODE                             #
@@ -55,8 +55,20 @@ def simclr_loss_naive(out_left, out_right, tau):
         # Hint: Compute l(k, k+N) and l(k+N, k).                                     #
         ##############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        total = 0
+        for i in range(2*N):
+          if i == k:
+            continue
+          total += torch.exp(sim(z_k, out[i])/tau)
+        total_loss -= torch.log(torch.exp(sim(z_k, z_k_N)/tau) / total)
 
-        pass
+        total = 0
+        for i in range(2*N):
+          if i == k+N:
+            continue
+          total += torch.exp(sim(z_k_N, out[i])/tau)
+        total_loss -= torch.log(torch.exp(sim(z_k_N, z_k)/tau) / total)
+        
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
          ##############################################################################

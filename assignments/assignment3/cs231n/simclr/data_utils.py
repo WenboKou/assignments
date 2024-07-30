@@ -60,7 +60,7 @@ class CIFAR10Pair(CIFAR10):
             #                                                                            #
             # Apply self.transform to the image to produce x_i and x_j in the paper #
             ##############################################################################
-            pass
+            x_i, x_j = self.transform(img), self.transform(img)
             ##############################################################################
             #                               END OF YOUR CODE                             #
             ##############################################################################
