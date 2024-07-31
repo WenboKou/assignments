@@ -14,7 +14,7 @@ def compute_train_transform(seed=123456):
     
     # Transformation that applies color jitter with brightness=0.4, contrast=0.4, saturation=0.4, and hue=0.1
     color_jitter = transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
-    
+  
     train_transform = transforms.Compose([
         ##############################################################################
         # TODO: Start of your code.                                                  #
@@ -29,7 +29,7 @@ def compute_train_transform(seed=123456):
         # Step 3: With a probability of 0.8, apply color jitter (you can use "color_jitter" defined above.
         transforms.RandomApply([color_jitter], p=0.8),
         # Step 4: With a probability of 0.2, convert the image to grayscale
-        transforms.RandomApply([transforms.Grayscale()], p=0.2),
+        transforms.RandomGrayscale(p=0.2),
         ##############################################################################
         #                               END OF YOUR CODE                             #
         ##############################################################################
