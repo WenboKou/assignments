@@ -321,7 +321,6 @@ def lstm_step_forward(x, prev_h, prev_c, Wx, Wh, b):
     # You may want to use the numerically stable sigmoid implementation above.  #
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
     activation = x @ Wx + prev_h @ Wh + b
 
     ai, af, ao, ag = np.split(activation, indices_or_sections=4, axis=-1)
@@ -334,7 +333,7 @@ def lstm_step_forward(x, prev_h, prev_c, Wx, Wh, b):
     next_c = f * prev_c + i * g
     next_h = o * np.tanh(next_c)
 
-
+    cache = (i, f, o, g, next_c, prev_c, Wx, x, Wh, prev_h)
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
     #                               END OF YOUR CODE                             #
@@ -367,8 +366,26 @@ def lstm_step_backward(dnext_h, dnext_c, cache):
     # the output value from the nonlinearity.                                   #
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    i, f, o, g, next_c, prev_c, Wx, x, Wh, prev_h = cache
+    
+    dnext_c = dnext_c + dnext_h * o * (1-np.tanh(next_c)**2)
+    dprev_c = dnext_c * f
+    
+    do = dnext_h * np.tanh(next_c)
+    df = dnext_c * prev_c
+    di = dnext_c * g
+    dg = dnext_c * i
+    dai = i*(1-i)*di
+    daf = f*(1-f)*df
+    dao = o*(1-o)*do
+    dag = (1-g**2)*dg
+    dactivation = np.concatenate((dai, daf, dao, dag), axis=-1)
 
-    pass
+    dx = dactivation @ Wx.T # (N, 4H) * (4H, D)
+    dWx = x.T @ dactivation # (D, N) * (N, 4H)
+    dprev_h = dactivation @ Wh.T
+    dWh = prev_h.T @ dactivation
+    db = np.sum(dactivation, axis=0)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
