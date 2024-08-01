@@ -322,7 +322,6 @@ def lstm_step_forward(x, prev_h, prev_c, Wx, Wh, b):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     activation = x @ Wx + prev_h @ Wh + b
-
     ai, af, ao, ag = np.split(activation, indices_or_sections=4, axis=-1)
 
     i = sigmoid(ai)
@@ -380,7 +379,6 @@ def lstm_step_backward(dnext_h, dnext_c, cache):
     dao = o*(1-o)*do
     dag = (1-g**2)*dg
     dactivation = np.concatenate((dai, daf, dao, dag), axis=-1)
-
     dx = dactivation @ Wx.T # (N, 4H) * (4H, D)
     dWx = x.T @ dactivation # (D, N) * (N, 4H)
     dprev_h = dactivation @ Wh.T
@@ -391,7 +389,7 @@ def lstm_step_backward(dnext_h, dnext_c, cache):
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
-
+    
     return dx, dprev_h, dprev_c, dWx, dWh, db
 
 
@@ -464,7 +462,17 @@ def lstm_backward(dh, cache):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    N, T, H = dh.shape
+    N, D = cache[0][-3].shape
+    dx = np.zeros((N, T, D))
+    dprev_h, dWx, dWh, db, dprev_c = 0, 0, 0, 0, 0
+    for t in range(T - 1, -1, -1):
+      dx[:, t, :], dprev_h, dprev_c, dWx_t, dWh_t, db_t = lstm_step_backward(dh[:, t, :] + dprev_h, dprev_c, cache[t])
+      dWx += dWx_t
+      dWh += dWh_t
+      db += db_t
+    dh0 = dprev_h
+
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
